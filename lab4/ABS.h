@@ -1,78 +1,254 @@
+#ifndef ABS_H
+#define ABS_H
 #include <iostream>
+#include <stdexcept>
 
+typedef unsigned int uint;
+//I like uint but my clang-based lsp has no typedef for it unlike gcc
 
-typedef unsigned int uint; //I like uint
+static const float SCALE_FACTOR = 2.0f;
 
 template <typename T>
 class ABS
 {
 private:
-    static const int MAX_CAP = 1;
-    int capacity = 0;
+    uint cap;
+    uint curr_size;
     T *arr;
-    uint size;
-
 public:
-    ABS() : capacity(MAX_CAP)
+    ABS()
     {
-        T arr = new T[capacity];
+        cap = 1;
+        curr_size = 0;
+        arr = new T[cap];
     }
 
-    ABS(int capacity) : capacity(capacity > MAX_CAP ? MAX_CAP : capacity)
+    ABS(int capacity)
     {
-        T arr = new T[this->capacity];
+        curr_size = 0;
+        cap = capacity;
+        arr = new T[cap];
     }
 
-    ABS(const ABS &d) : capacity(d.capacity), size(d.size)
+    ABS(const ABS &d)
     {
-        T arr = new T[capacity];
-        std::copy(d.arr, d.arr+ size, arr);
-    }
+        curr_size = d.curr_size;
+        cap = d.cap;
+        arr = new T[cap];
+        for (uint i = 0; i < curr_size; i++)
+        {
+            arr[i] = d.arr[i];
+        }
 
-    ~ABS()
-    {
-        delete[] arr;
     }
 
     ABS &operator=(const ABS &d)
     {
-        if (this != &d)
+        if (this == &d)
         {
-            delete[] arr;
-            capacity = d.capacity;
-            arr = new T[capacity];
-            size = d.size;
-            for (int i = 0; i < size; i++)
-            {
-                arr[i] = d.arr[i];
-            }
+            return *this;
         }
+
+        delete[] arr;
+        curr_size = d.curr_size;
+        cap = d.cap;
+        arr = new T[cap];
+
+        for(uint i = 0; i < curr_size; i++)
+        {
+            arr[i] = d.arr[i];
+        } 
+
         return *this;
-    }    
+
+    }
+
+    ~ABS()
+    {
+       delete[] arr; 
+    }ABS(const ABS &d)
+    {
+        curr_size = d.curr_size;
+        cap = d.cap;
+        arr = new T[cap];
+        for (uint i = 0; i < curr_size; i++)
+        {
+            arr[i] = d.arr[i];
+        }
+
+    }
+
+    ABS &operator=(const ABS &d)
+    {
+        if (this == &d)
+        {
+            return *this;
+        }
+
+        delete[] arr;
+        curr_size = d.curr_size;
+        cap = d.cap;
+        arr = new T[cap];
+
+        for(uint i = 0; i < curr_size; i++)
+        {
+            arr[i] = d.arr[i];
+        } 
+
+        return *this;
+
+    }
+
+    ~ABS()
+    {
+       delete[] arr; 
+    }AABS(const ABS &d)
+    {
+        curr_size = d.curr_size;
+        cap = d.cap;
+        arr = new T[cap];
+        for (uint i = 0; i < curr_size; i++)
+        {
+            arr[i] = d.arr[i];
+        }
+
+    }
+
+    ABS &operator=(const ABS &d)
+    {
+        if (this == &d)
+        {
+            return *this;
+        }
+
+        delete[] arr;
+        curr_size = d.curr_size;
+        cap = d.cap;
+        arr = new T[cap];
+
+        for(uint i = 0; i < curr_size; i++)
+        {
+            arr[i] = d.arr[i];
+        } 
+
+        return *this;
+
+    }
+
+    ~ABS()
+    {
+       delete[] arr; 
+    }BS(const ABS &d)
+    {
+        curr_size = d.curr_size;
+        cap = d.cap;
+        arr = new T[cap];
+        for (uint i = 0; i < curr_size; i++)
+        {
+            arr[i] = d.arr[i];
+        }
+
+    }
+
+    ABS &operator=(const ABS &d)
+    {
+        if (this == &d)
+        {
+            return *this;
+        }
+
+        delete[] arr;
+        curr_size = d.curr_size;
+        cap = d.cap;
+        arr = new T[cap];
+
+        for(uint i = 0; i < curr_size; i++)
+        {
+            arr[i] = d.arr[i];
+        } 
+
+        return *this;
+
+    }
+
+    ~ABS()
+    {
+       delete[] arr; 
+    }
 
     void push(T data)
     {
-        arr[size] = data;
-        size++;
+        if (curr_size == cap)
+        {
+            uint r_cap = static_cast<uint>(cap * SCALE_FACTOR);
+            T *temp = new T[r_cap];
+
+            for(uint i = 0; i < cap; i++)
+            {
+                temp[i] = arr[i];
+            }
+
+            delete[] arr;
+
+            arr = temp;
+            cap = r_cap;
+        }
+        arr[curr_size++] = data;
     }
 
     T pop()
     {
-        if (size == 0)
-        {
+        if (curr_size == 0)
             throw std::runtime_error("Stack is empty");
-        }
-        size--;
-        return arr[size];
+        T res = arr[curr_size - 1];
+        curr_size--;
 
-    }
+        if (curr_size == 0)
+        {
+            delete[] arr;
+            cap = 1;
+            arr = new T[cap];
+        }
+        else if (static_cast<float>(curr_size) / cap <= 1.0f / SCALE_FACTOR)
+        {
+            uint r_cap = static_cast<uint>(cap / SCALE_FACTOR);
+            if (r_cap < 1)
+                r_cap = 1;
+            T* temp = new T[r_cap];
+            for (uint i = 0; i < curr_size; i++)
+                temp[i] = arr[i];
+            delete[] arr;
+            arr = temp;
+            cap = r_cap;
+        }
+        return res;
+    } 
 
     T peek()
     {
-        
-
+        if (curr_size == 0)
+        {
+            throw std::runtime_error("Stack is empty");
+        }
+        T val = arr[curr_size-1];
+        return val;
     }
-    uint getSize();
-    uint getMaxCapacity();
-    T* getData();
+
+    uint getSize()
+    {
+       return curr_size; 
+    }
+
+    uint getMaxCapacity()
+    {
+       return cap; 
+    }
+
+    T* getData()
+    {
+        return arr;
+    }
 };
+
+#endif
+
