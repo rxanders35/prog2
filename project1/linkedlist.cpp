@@ -176,26 +176,23 @@ public:
 
   void AddNodesHead(T arr[], int arr_size) {
     for (int i = 0; i < arr_size; i++) {
-      Node n = {
-          arr[i] // data
-      };
+      Node *n = new Node(arr[i]);
       AddHead(n);
     }
   }
 
   void AddNodesTail(T arr[], int arr_size) {
     for (int i = 0; i < arr_size; i++) {
-      Node n = {
-          arr[i] // data
-      };
+      Node *n = new Node(arr[i]);
       AddTail(n);
     }
   }
 
   void InsertAfter(Node *prev_node, T val) {
-    Node n = {
-        val // data
-    };
+    if (head == nullptr) {
+      return;
+    }
+    Node *n = new Node(val);
     n->prev = prev_node;
     n->next = prev_node->next;
     prev_node->next = n;
@@ -205,9 +202,10 @@ public:
   }
 
   void InsertBefore(Node *next_node, T val) {
-    Node n = {
-        val // data
-    };
+    if (head == nullptr) {
+      return;
+    }
+    Node *n = new Node(val);
     n->prev = next_node->prev;
     n->next = next_node;
     if (!n->GetHead()) {
@@ -215,4 +213,62 @@ public:
     }
     next_node->prev = n;
   }
+
+  void InsertAt(int idx, T val) {
+    if (idx < 1) {
+      return head;
+    }
+
+    if (idx == 1) {
+      Node *n = new Node(val);
+      AddHead(n);
+    }
+
+    Node *curr = head;
+    for (int i = 1; i < idx - 1 && curr != nullptr; i++) {
+      curr = curr->next;
+    }
+
+    if (curr == nullptr) {
+      return head;
+    }
+
+    Node *n = new Node(val);
+
+    n->next = curr->next;
+    curr->next = n;
+  }
+
+  // Removals
+
+  void RemoveHead(Node *rmHead) {
+    if (head == nullptr) {
+      return;
+    }
+    Node *temp = head;
+    rmHead = head->next;
+    if (rmHead != nullptr) {
+      rmHead->prev = nullptr;
+    }
+    delete temp;
+  }
+
+  void RemoveTail(Node *rmTail) {
+    if (head == nullptr) {
+      return;
+    }
+    if (head->next == nullptr) {
+      delete head;
+    }
+    Node *curr = head;
+    while (curr->next != nullptr) {
+      curr = curr->next;
+    }
+
+    if (curr->prev != nullptr) {
+      curr->prev->next = nullptr;
+    }
+  }
+
+  int Remove(T val) {}
 };
