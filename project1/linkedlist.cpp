@@ -1,19 +1,27 @@
-#include <cstdint>
 #include <iostream>
+#include <stdexcept>
 #include <vector>
 
 template <typename T> class LinkedList {
+public:
   struct Node {
     T data;
     Node *next;
     Node *prev;
+    Node() {
+      next = nullptr;
+      prev = nullptr;
+    }
+    Node(const T &val) {
+      data = val;
+      next = nullptr;
+      prev = nullptr;
+    }
   };
 
   Node *head;
   Node *tail;
   int node_count;
-
-public:
   // Constructors
   LinkedList() {
     head = nullptr;
@@ -25,250 +33,314 @@ public:
     head = nullptr;
     tail = nullptr;
     node_count = 0;
-
-    if (other.head == nullptr) {
+    if (other->head == nullptr) {
       return;
     }
-
-    head = new Node;
-    head->data = other.head->data;
-    head->next = nullptr;
+    Node *other_curr = other->head;
+    head = new Node(other_curr->data);
     tail = head;
     node_count = 1;
-
-    Node *curr = other.head->next;
-    Node *recent = head;
-
-    while (curr != nullptr) {
-      Node *newNode = new Node;
-      newNode->data = curr->data;
-      newNode->next = nullptr;
-      recent->next = newNode;
-      recent = newNode;
-      curr = curr->next;
+    other_curr = other_curr->next;
+    while (other_curr != nullptr) {
+      Node *new_node = new Node(other_curr->data);
+      new_node->prev = tail;
+      tail->next = new_node;
+      tail = new_node;
       node_count++;
+      other_curr = other_curr->next;
     }
-    tail = recent;
-    node_count = other.node_count;
   }
 
-  ~LinkedList() {
-    Node *curr = head;
-    while (curr != nullptr) {
-      Node *next = curr->next;
-      delete curr;
-      curr = next;
-    }
-    head = nullptr;
-    tail = nullptr;
-    node_count = 0;
-  }
+  ~LinkedList() { Clear(); }
+
   // Behaviors
   void PrintForward() {
     Node *curr = head;
     while (curr != nullptr) {
-      Node *next = curr->next;
       std::cout << curr->data << std::endl;
+      curr = curr->next;
     }
   }
 
   void PrintReverse() {
     Node *curr = tail;
     while (curr != nullptr) {
-      Node *prev = curr->prev;
       std::cout << curr->data << std::endl;
+      curr = curr->prev;
     }
   }
 
-  void PrintForwardRecursive(Node *head) {
-    if (head == nullptr) {
+  void PrintForwardRecursive(Node *node) {
+    if (node == nullptr) {
       return;
     }
-    std::cout << head->data;
-    PrintForwardRecursive(head->next);
+    std::cout << node->data << std::endl;
+    PrintForwardRecursive(node->next);
   }
 
-  void PrintReverseRecursive(Node *head) {
-    if (head == nullptr) {
+  void PrintReverseRecursive(Node *node) {
+    if (node == nullptr) {
       return;
     }
-    std::cout << tail->data;
-    PrintForwardRecursive(tail->next);
+    std::cout << node->data << std::endl;
+    PrintReverseRecursive(node->prev);
   }
   // Accessors
   int NodeCount() { return this->node_count; }
 
-  void FindAll(std::vector<int> &vectOUT, T val) {
+  void FindAll(std::vector<Node *> &vectOUT, T val) {
     Node *curr = head;
     while (curr != nullptr) {
-      Node *next = curr->next;
-      if (next->data == val) {
-        vectOUT.push_back(*next);
-        // leave it this way for now
-        // or it could be totally correct!
+      Node curr = curr->next;
+      if (curr->data == val) {
+        vectOUT.push_back(curr);
       }
+      curr = curr->next;
     }
   }
 
   Node *Find(T val) {
     Node *curr = head;
     while (curr != nullptr) {
-      bool found = false;
-      Node *next = curr->next;
-      if (next->data == val) {
-        found = true;
-        return *next;
+      if (curr->data == val) {
+        return curr;
       }
-      if (!found) {
-        return nullptr;
-      }
+      curr = curr->next;
       // leave it this way for now
       // or it could be totally correct!
     }
+    return nullptr;
   }
 
   Node *GetNode(int idx) {
-    Node *curr = head;
-    if (curr != nullptr) {
-      for (int i = 0; i < node_count; i++) {
-        Node *next = curr->next;
-        if (i == idx) {
-          return *next;
-          // THIS MIGHT WORK
-        }
-      }
+    if (idx < 0 || idx >= node_count) {
+      throw std::out_of_range("idx out of range");
     }
+    Node *curr = head;
+    for (int i = 0; i < idx; i++) {
+      curr = curr->next;
+      // THIS MIGHT WORK
+    }
+    return curr;
   }
 
-  Node *GetNode(int idx) const {
-    Node *curr = head;
-    if (curr != nullptr) {
-      for (int i = 0; i < node_count; i++) {
-        Node *next = curr->next;
-        if (i == idx) {
-          return *next;
-        }
-      }
+  const Node *GetNode(int idx) const {
+    if (idx < 0 || idx >= node_count) {
+      throw std::out_of_range("idx out of range");
     }
+    Node *curr = head;
+    for (int i = 0; i < idx; i++) {
+      curr = curr->next;
+      // THIS MIGHT WORK
+    }
+    return curr;
   }
 
-  Node *GetHead() { return *head; }
-  Node *GetHead() const { return *head; }
-  Node *GetTail() { return *tail; }
-  Node *GetTail() const { return *tail; }
+  Node *GetHead() { return head; }
+  const Node *GetHead() const { return head; }
+  Node *GetTail() { return tail; }
+  const Node *GetTail() const { return tail; }
 
   // Insertions
-  void AddHead(Node *newHead) {
-    newHead->prev = nullptr;
+  void AddHead(T val) {
+    Node *newHead = new Node(val);
     newHead->next = head;
-    if (node_count != 0) {
+    if (head != nullptr) {
       head->prev = newHead;
     }
+    head = newHead;
+    if (node_count == 0) {
+      tail = newHead;
+    }
+    node_count++;
   }
 
-  void AddTail(Node *newTail) {
-    newTail->next = nullptr;
+  void AddTail(T val) {
+    Node *newTail = new Node(val);
     newTail->prev = tail;
-    if (node_count != 0) {
+    if (tail != nullptr) {
       tail->next = newTail;
     }
+    tail = newTail;
+    if (node_count == 0) {
+      tail = newTail;
+    }
+    node_count++;
   }
 
   void AddNodesHead(T arr[], int arr_size) {
-    for (int i = 0; i < arr_size; i++) {
-      Node *n = new Node(arr[i]);
-      AddHead(n);
+    for (int i = arr_size - 1; i >= 0; i--) {
+      AddHead(arr[i]);
     }
   }
 
   void AddNodesTail(T arr[], int arr_size) {
     for (int i = 0; i < arr_size; i++) {
-      Node *n = new Node(arr[i]);
-      AddTail(n);
+      AddHead(arr[i]);
     }
   }
 
   void InsertAfter(Node *prev_node, T val) {
-    if (head == nullptr) {
+    if (prev_node == nullptr) {
       return;
     }
     Node *n = new Node(val);
     n->prev = prev_node;
     n->next = prev_node->next;
     prev_node->next = n;
-    if (!n->GetTail()) {
+    if (n->next != nullptr) {
       n->next->prev = n;
+    } else {
+      tail = n;
     }
+    node_count++;
   }
 
   void InsertBefore(Node *next_node, T val) {
-    if (head == nullptr) {
+    if (next_node == nullptr) {
       return;
     }
     Node *n = new Node(val);
-    n->prev = next_node->prev;
     n->next = next_node;
-    if (!n->GetHead()) {
-      n->prev->next = n;
+    n->prev = next_node->prev;
+    n->prev->next = n;
+    if (n->prev != nullptr) {
+      next_node->prev = n;
+    } else {
+      head = n;
     }
-    next_node->prev = n;
+    node_count++;
   }
 
   void InsertAt(int idx, T val) {
-    if (idx < 1) {
-      return head;
+    if (idx < 0 || idx > node_count) {
+      throw std::out_of_range("idx out of range");
     }
-
-    if (idx == 1) {
-      Node *n = new Node(val);
-      AddHead(n);
+    if (idx == 0) {
+      AddHead(tail);
+      return;
     }
-
-    Node *curr = head;
-    for (int i = 1; i < idx - 1 && curr != nullptr; i++) {
-      curr = curr->next;
-    }
-
-    if (curr == nullptr) {
-      return head;
-    }
-
-    Node *n = new Node(val);
-
-    n->next = curr->next;
-    curr->next = n;
+    Node *curr = GetNode(idx - 1);
+    InsertAfter(curr, val);
   }
 
   // Removals
 
-  void RemoveHead(Node *rmHead) {
+  bool RemoveHead() {
     if (head == nullptr) {
-      return;
+      return false;
     }
     Node *temp = head;
-    rmHead = head->next;
-    if (rmHead != nullptr) {
-      rmHead->prev = nullptr;
+    head = head->next;
+    if (head != nullptr) {
+      head->prev = nullptr;
+    } else {
+      tail = nullptr;
     }
     delete temp;
+    node_count--;
+    return true;
   }
 
-  void RemoveTail(Node *rmTail) {
-    if (head == nullptr) {
-      return;
+  bool RemoveTail() {
+    if (tail == nullptr) {
+      return false;
     }
-    if (head->next == nullptr) {
+    Node *temp = tail;
+    tail = tail->prev;
+    tail->next = nullptr;
+    delete temp;
+    node_count--;
+    return true;
+  }
+
+  int Remove(T val) {
+    int num_removed = 0;
+    Node *curr = head;
+    while (curr != nullptr) {
+      Node *next = curr->next;
+      if (curr->data == val) {
+        if (curr == head) {
+          head = next;
+        } else {
+          curr->prev->next = next;
+        }
+
+        if (curr == tail) {
+          tail = curr->prev;
+        } else {
+          next->prev = curr->prev;
+        }
+        delete curr;
+        num_removed++;
+        node_count--;
+      }
+      curr = next;
+    }
+    return num_removed;
+  }
+
+  bool RemoveAt(int idx) {
+    if (idx < 0 || idx >= node_count) {
+      return false;
+      Node *curr = GetNode(idx);
+      curr->prev->next = curr->next;
+      curr->next->prev = curr->prev;
+      delete curr;
+      return true;
+    }
+  }
+
+  void Clear() {
+    while (head != nullptr) {
+      Node *next = head->next;
       delete head;
+      head = next;
+    }
+    tail = nullptr;
+    node_count = 0;
+  }
+
+  T &operator[](int idx) {
+    if (idx < 0 || idx > node_count) {
+      throw std::out_of_range("idx out of range");
+    }
+    return GetNode(idx)->data;
+  }
+
+  const T &operator[](int idx) const {
+    if (idx < 0 || idx > node_count) {
+      throw std::out_of_range("idx out of range");
+    }
+    return GetNode(idx)->data;
+  }
+
+  LinkedList<T> &operator=(const LinkedList<T> &other) {
+    if (this != &other) {
+      Clear();
+      // the joy of helper functions!!!!
+      Node *curr = other->head;
+      while (curr != nullptr) {
+        AddTail(curr->data);
+        curr = curr->next;
+      }
+    }
+    return *this;
+  }
+
+  bool operator==(const LinkedList<T> &other) const {
+    if (node_count != other.node_count) {
+      return false;
     }
     Node *curr = head;
-    while (curr->next != nullptr) {
+    Node *other_curr = other_curr->head;
+    while (curr != nullptr) {
+      if (curr->data != other_curr->data) {
+        return false;
+      }
       curr = curr->next;
+      other_curr = other_curr->next;
     }
-
-    if (curr->prev != nullptr) {
-      curr->prev->next = nullptr;
-    }
+    return true;
   }
-
-  int Remove(T val) {}
 };
